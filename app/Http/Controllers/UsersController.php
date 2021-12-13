@@ -34,13 +34,19 @@ class UsersController extends Controller
 
         if ($validator->fails()) {
             //Preparar la respuesta
-            $response = [
-                'name.required' => 'Necesitamos saber tu nombre!',
-                'email.required' => 'Necesitamos saber tu correo!',
-                'password.required' => 'Necesitamos saber tu contraseña!',
-                'position.required' => 'Necesitamos saber tu posición en la empresa!',
-                'salary.required' => 'Necesitamos saber tu salario!',
-                'biography.required' => 'Necesitamos saber tu biografía!',
+            $response = ['msg'] = "El  ya existe, pruebe con otro";
+            
+                }else {
+                $user->save();
+                $response['msg'] = "Usuario guardado con id ".$user->id;
+                }    
+            }catch(\Exception $e){
+            $respuesta['status'] = 0;
+            $respuesta['msg'] = "Se ha producido un error: ".$e->getMessage();
+            }
+
+         return response()->json($respuesta);
+        }
             ];
         }
         
