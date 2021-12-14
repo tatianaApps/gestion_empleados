@@ -30,12 +30,16 @@ Route::get('/route',function(){})->middleware('permissions');
         Route::post('/update',[UsersController::class, 'update']);
     });
 */
-Route::prefix('users')->group(function(){
-    Route::put('/registerUser',[UsersController::class,'registerUser']);
-    Route::post('/desactivar_usuario/{id}',[UsuariosController::class,'desactivar_usuario']);
-    Route::post('/editar/{id}',[UsuariosController::class,'editar']);
-    Route::get('/ver/{id}',[UsuariosController::class,'ver']);
-    Route::put('/adquirirCursos/{id}/{id_curso}',[UsuariosController::class,'adquirirCursos']);
-    Route::get('/verCursosAdquiridos/{id}',[UsuariosController::class,'verCursosAdquiridos']);
+
+Route::middleware(['apitoken'])->prefix('users')->group(function(){
+    Route::put('/registerUser',[UsersController::class,'registerUser'])->withoutMiddleware('apitoken');
+    Route::post('/login',[UsersController::class,'login'])->withoutMiddleware('apitoken');
+    //Route::post('/desactivar_usuario/{id}',[UsuariosController::class,'desactivar_usuario']);
+    //Route::post('/editar/{id}',[UsuariosController::class,'editar']);
+    //Route::get('/ver/{id}',[UsuariosController::class,'ver']);
+    //Route::put('/adquirirCursos/{id}/{id_curso}',[UsuariosController::class,'adquirirCursos']);
+    //Route::get('/verCursosAdquiridos/{id}',[UsuariosController::class,'verCursosAdquiridos']);
 });
+
+Route::middleware('apitoken')->get('/protected',[UsersController::class, 'protected']);
     
