@@ -19,27 +19,19 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/route',function(){})->middleware('permissions');
-
-/*Route::middleware(['jwt','apitoken'])->prefix('users')->
-    group(function (){
-        Route::post('/register',[UsersController::class, 'register'])->withoutMiddleware('apitoken');
-        Route::post('/login',[UsersController::class, 'login'])->withoutMiddleware('apitoken');
-        Route::post('/key',[UsersController::class, 'recoverKey'])->withoutMiddleware('apitoken');
-        Route::post('/logout',[UsersController::class, 'logout']);
-        Route::post('/update',[UsersController::class, 'update']);
-    });
-*/
+Route::get('/route',function(){})->middleware('permissions'); //esto ??
 
 Route::middleware(['apitoken'])->prefix('users')->group(function(){
     Route::put('/registerUser',[UsersController::class,'registerUser'])->withoutMiddleware('apitoken');
     Route::post('/login',[UsersController::class,'login'])->withoutMiddleware('apitoken');
-    //Route::post('/desactivar_usuario/{id}',[UsuariosController::class,'desactivar_usuario']);
-    //Route::post('/editar/{id}',[UsuariosController::class,'editar']);
+    Route::post('recoverPassword',[UsersController::class,'recoverPassword'])->withoutMiddleware('apitoken');
     //Route::get('/ver/{id}',[UsuariosController::class,'ver']);
-    //Route::put('/adquirirCursos/{id}/{id_curso}',[UsuariosController::class,'adquirirCursos']);
-    //Route::get('/verCursosAdquiridos/{id}',[UsuariosController::class,'verCursosAdquiridos']);
 });
 
-Route::middleware('apitoken')->get('/protected',[UsersController::class, 'protected']);
-    
+Route::middleware('apitoken',)->get('/protected',[UsersController::class, 'protected']); //solo protegida para usuario normal autenticado
+Route::middleware('apitoken', 'permissions')->get('/protected-and-permission',[UsersController::class, 'protected-and-permission']);   
+
+
+//listado empleados -> apitoken y permisos
+//ver datos personales -> apitoken
+//crear nuevo empleado -> apitoken y permisos
