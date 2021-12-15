@@ -61,48 +61,38 @@ class UsersController extends Controller
     public function login(Request $req){
         
         $response = ["status" => 1, "msg" => ""];
-    	$data = $req->getContent();
-        $data = json_decode($data);
 
         //Buscar el email
         $email = $req->email;
-        $password = $req->password;
-
-        //Validar
-        /*$validator = Validator::make(json_decode($req->getContent(), true), [
-            'email' => 'required|email|unique:App\Models\User,email|max:50|regex:/^([_a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix'
-        ]);
-
-        if ($validator->fails()) {
-            $response['status'] = 0;
-    		$response['msg'] = $validator->errors();
-            return response()->json($response);
-        }*/
 
         //Encontrar al usuario con ese email
         $user = User::where('email', $email)->first();
 
-        //Pasar la validación ??
+        //Comprobar si existe el usuario
+        if($user){
+            if (Hash::check($req->password, $user->password)) { //Comprobar la contraseña
+                //Todo correcto
 
-        //Comprobar la contraseña
-        if (Hash::check($req->password, $user->password)) {
-            //Todo correcto
+                //Generar el api token
+                do{
+                    $token = Hash::make($user->id.now());
+                }while(User::where('api_token', $token)->first()); //encontrar a un usuario con ese apitoken
 
-            //Generar el api token
-            do{
-                $token = Hash::make($user->id.now());
-            }while(User::where('api_token', $token)->first()); //encontrar a un usuario con ese apitoken
+                $user->api_token = $token;
+                $user->save();
 
-            $user->api_token = $token;
-            $user->save();
-
-            $response['msg'] = "Login correcto ".$user->api_token;
-            return response()->json($response); //Incluye el api token
-        }else{
-            //Login mal
-            $response['msg'] = "La contraseña no es correcta";
-            return response()->json($response);
+                $response['msg'] = "Login correcto ".$user->api_token; //Incluye el api token
+            }else{
+                //Login mal
+                $response['msg'] = "La contraseña no es correcta";
+                
+            }
         }
+        else{
+            $response['msg'] = "Usuario no encontrado";
+        }
+        
+        return response()->json($response);
     }
 
     public function recoverPassword(Request $req){

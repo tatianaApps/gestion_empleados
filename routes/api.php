@@ -19,17 +19,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/route',function(){})->middleware('permissions'); //esto ??
-
 Route::middleware(['apitoken'])->prefix('users')->group(function(){
     Route::put('/registerUser',[UsersController::class,'registerUser'])->withoutMiddleware('apitoken');
-    Route::post('/login',[UsersController::class,'login'])->withoutMiddleware('apitoken');
-    Route::post('recoverPassword',[UsersController::class,'recoverPassword'])->withoutMiddleware('apitoken');
-    //Route::get('/ver/{id}',[UsuariosController::class,'ver']);
+    //Route::post('recoverPassword',[UsersController::class,'recoverPassword'])->withoutMiddleware('apitoken');
 });
 
+Route::post('/login',[UsersController::class,'login']);
+
 Route::middleware('apitoken',)->get('/protected',[UsersController::class, 'protected']); //solo protegida para usuario normal autenticado
-Route::middleware('apitoken', 'permissions')->get('/protected-and-permission',[UsersController::class, 'protected-and-permission']);   
+Route::middleware('apitoken', 'permissions')->get('/registerUser',[UsersController::class, 'registerUser']);   
 
 
 //listado empleados -> apitoken y permisos
