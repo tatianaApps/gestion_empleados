@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Notification;
 use App\Models\User;
 
 class UsersController extends Controller
@@ -61,34 +63,34 @@ class UsersController extends Controller
     public function login(Request $req){
         
         $response = ["status" => 1, "msg" => ""];
+        $data = $req->getContent();
+        $data = json_decode($data);
 
         //Buscar el email
-        $email = $req->email;
-
+        $email = $data->email;
+       
         //Encontrar al usuario con ese email
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', '=', $data->email)->first();
 
         //Comprobar si existe el usuario
         if($user){
-            if (Hash::check($req->password, $user->password)) { //Comprobar la contraseña
-                //Todo correcto
-
-                //Generar el api token
+            if (Hash::check($data->password, $user->password)) { //Comprobar la contraseña
+                //Si todo correcto generar el api token
                 do{
                     $token = Hash::make($user->id.now());
                 }while(User::where('api_token', $token)->first()); //encontrar a un usuario con ese apitoken
 
                 $user->api_token = $token;
                 $user->save();
-
-                $response['msg'] = "Login correcto ".$user->api_token; //Incluye el api token
+                $response['msg'] = "Login correcto. Api token generado: ".$user->api_token; //Incluye el api token
             }else{
                 //Login mal
+                $response['status'] = 0;
                 $response['msg'] = "La contraseña no es correcta";
-                
             }
         }
         else{
+            $response['status'] = 0;
             $response['msg'] = "Usuario no encontrado";
         }
         
@@ -103,35 +105,76 @@ class UsersController extends Controller
         $data = json_decode($data);
 
         //Buscar el email
-        $email = $data->email;
+        $email = $req->email;
 
-        //Validar
-        $validator = Validator::make(json_decode($req->getContent(), true), [
-            'email' => 'required|email|unique:App\Models\User,email|max:50|regex:/^([_a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix'
-        ]);
+        //Encontrar al usuario con ese email
+        $user = User::where('email', '=', $data->email)->first();
 
-        if ($validator->fails()) {
-            $response['status'] = 0;
-    		$response['msg'] = $validator->errors();
-            return response()->json($response);
-        }else {
-            //Encontrar el usuario con ese email
-            $user = User::where('email', $email)->first();
+        //Comprobar si existe el usuario
+        if($user){
+           
+            $user->api_token = null;
+
+            //Generar nueva contraseña aleatoriamente (función para generar strings aleatorios)
+            $password = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNñÑoOpPqQrRsStTuUvVwWxXyYzZ0123456789";
+            $passwordCharCount = strlen($password);
+            $passwordLength = 8;
+            $newPassword = "";
+
+            for($i = 0; $i < $passwordLength; $i++){
+                $newPassword .= $password[rand(0, $passwordCharCount -1)];
+            }
+
+            //Enviarla por email
+            Mail::to($user->email)->send(new Notification($newPassword));
+       
+            //Guardamos al usuario con la nueva contraseña cifrada
+            $user->password = Hash::make($newPassword);
+            $user->save();
+            $response['msg'] = "Nueva contraseña generada. Revisa tu correo";
+
         }
-
-            //Pasar la validación
-         
-        //Si encontramos al usuario
-        $user->api_token = null;
-
-        //Generar nueva contraseña aleatoriamente (función para generar strings aleatorios)
-        $password = 
-
-        $user->password = Hash::make($password); //guardamos la nueva
-
-        //Enviarla por email
-
-        //Temporal: devolver la nueva contraseña en la respuesta, se devuelve la de arriba, password = aleatorio
+        else{
+            $response['status'] = 0;
+            $response['msg'] = "Usuario no encontrado";
+        }
+        
+        return response()->json($response);
     }
 
+    public function listEmployee(Request $req){
+
+        $response = ["status" => 1, "msg" => ""];
+        $data = $req->getContent();
+    	$data = json_decode($data);
+
+        try{
+        	$user = DB::table('users')
+                ->get();
+            $respuesta['empleados'] = $user;
+        	
+        }catch(\Exception $e){
+            $respuesta['status'] = 0;
+            $respuesta['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+        return response()->json($respuesta);
+    }
+
+    public function seeProfile(Request $req){
+
+        $response = ['status' => 1, "msg" => ""];
+        $data = $req->getContent();
+        $data = json_decode($data);
+
+        try{
+            $user = User::where('api_token', $token)->first();
+            $user->api_token = $token;
+            $user->api_token = User::find($token);
+            $response['datos'] = $user;
+        }catch(\Exception $e){
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+        return response()->json($response);
+    }
 }

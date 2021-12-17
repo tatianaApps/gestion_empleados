@@ -15,14 +15,16 @@ class ValidateUserPermission
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next) //hay que sacar el usuario no por id, sino por apitoken ??
+    public function handle(Request $req, Closure $next) //hay que sacar el usuario no por id, sino por apitoken ??
     {
         //Comprobar los permisos
-        if($request->user->position == 'management' || $request->user->position == 'human_resources')
-            return $next($request);
-        else{
-            //Error
+        if($req->user->position =='management' || $req->user->position =='human_resources'){
+            return $next($req);
+            $response['msg'] = "Perfil validado";
+        }else{
+             $response['msg'] = "No tienes permisos para realizar esta función";
+            
         }
-        
+        return response()->json($response);
     }
 }

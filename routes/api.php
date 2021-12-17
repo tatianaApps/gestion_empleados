@@ -15,20 +15,25 @@ use App\Http\Controllers\UsersController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+//Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+ //   return $request->user();
+//});
+
+Route::middleware(['apitoken','permissions'])->prefix('users')->group(function(){
+    Route::put('/registerUser',[UsersController::class,'registerUser']);
+    Route::get('/listEmployee',[UsersController::class, 'listEmployee']);
 });
 
-Route::middleware(['apitoken'])->prefix('users')->group(function(){
-    Route::put('/registerUser',[UsersController::class,'registerUser'])->withoutMiddleware('apitoken');
-    //Route::post('recoverPassword',[UsersController::class,'recoverPassword'])->withoutMiddleware('apitoken');
+Route::post('login',[UsersController::class,'login']);
+
+Route::prefix('users')->group(function(){
+    //Route::put('/registerUser',[UsersController::class,'registerUser']); //Utilizada únicamente al principio para tener perfiles predefinidos
+    Route::post('/recoverPassword',[UsersController::class,'recoverPassword']);
 });
 
-Route::post('/login',[UsersController::class,'login']);
-
-Route::middleware('apitoken',)->get('/protected',[UsersController::class, 'protected']); //solo protegida para usuario normal autenticado
-Route::middleware('apitoken', 'permissions')->get('/registerUser',[UsersController::class, 'registerUser']);   
-
+Route::middleware('apitoken')->prefix('users')->group(function(){
+    Route::get('/seeProfile',[UsersController::class, 'seeProfile']);
+});
 
 //listado empleados -> apitoken y permisos
 //ver datos personales -> apitoken

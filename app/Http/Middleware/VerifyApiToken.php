@@ -15,26 +15,20 @@ class VerifyApiToken
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $req, Closure $next)
     {
-        $response = ["status" => 1, "msg" => ""];
-    	$data = $req->getContent();
-        $data = json_decode($data);
-
         //Buscar al usuario
         $apitoken = $req->api_token; //pasar en Postman en params, no Json
-
-        //Pasar user
+        
+        //Pasar usuario
         $user = User::where('api_token', $apitoken)->first(); 
-
-        if(!$user){
-            //si no hay usuario
+       
+        if(!$user){ //Si no hay usuario
             //Error
-            $response['msg'] = "El usuario no existe.";
-            return response()->json($response);
+            die("Token incorrecto");
         }else{
-            $request->user = $user;
-            return $next($request);
+            $req->user = $user;
+            return $next($req);
         }
     }
 }
