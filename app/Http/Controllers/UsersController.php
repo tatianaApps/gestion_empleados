@@ -150,18 +150,17 @@ class UsersController extends Controller
             if($req->user->position == 'management'){  //si es directivo muestra estos datos
                 $user = DB::table('users')
                     ->where('position', 'like', 'Employee')
-                    ->where('position', 'like', 'Human_resources')
+                    ->orwhere('position', 'like', 'Human_resources')
                     ->select('name','position','salary')
                     ->get();
                 $response['empleados y recursos humanos'] = $user;
             }
-            elseif($req->user->position == 'human_resources'){ 
-                $response['empleados'] = $user;//si es rrhh muestra estos otros
+            else if($req->user->position == 'human_resources'){ //si es rrhh muestra estos otros
                 $user = DB::table('users')
                     ->where('position', 'like', 'Employee')
                     ->select('name','position','salary')
                     ->get();
-          
+                $response['empleados'] = $user;
             }   
         }catch(\Exception $e){
             $response['status'] = 0;
