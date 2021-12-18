@@ -21,7 +21,8 @@ use App\Http\Controllers\UsersController;
 
 Route::middleware(['apitoken','permissions'])->prefix('users')->group(function(){
     Route::put('/registerUser',[UsersController::class,'registerUser']);
-    Route::get('/listEmployee',[UsersController::class, 'listEmployee']);
+    Route::get('/listEmployee',[UsersController::class, 'listEmployee']); 
+    Route::get('/detailEmployee/{id}',[UsersController::class, 'detailEmployee']);
 });
 
 Route::post('login',[UsersController::class,'login']);

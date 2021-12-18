@@ -142,34 +142,60 @@ class UsersController extends Controller
         return response()->json($response);
     }
 
-    public function listEmployee(Request $req){
+    public function listEmployee(Request $req){  
 
         $response = ["status" => 1, "msg" => ""];
-        $data = $req->getContent();
-    	$data = json_decode($data);
 
         try{
+            if($req->user->position == 'management'){  //si es directivo muestra estos datos
+                $user = DB::table('users')
+                    ->where('position', 'like', 'Employee')
+                    ->where('position', 'like', 'Human_resources')
+                    ->select('name','position','salary')
+                    ->get();
+                $response['empleados y recursos humanos'] = $user;
+            }
+            elseif($req->user->position == 'human_resources'){ 
+                $response['empleados'] = $user;//si es rrhh muestra estos otros
+                $user = DB::table('users')
+                    ->where('position', 'like', 'Employee')
+                    ->select('name','position','salary')
+                    ->get();
+          
+            }   
+        }catch(\Exception $e){
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+        return response()->json($response);
+    }
+
+    public function detailEmployee($id, Request $req){
+        $response = ["status" => 1, "msg" => ""];
+
+        try{
+            $user = User::find($id);
+            $response['datos'] = $user;
         	$user = DB::table('users')
+                ->where('position', 'like', 'Employee')
+                ->select('name','email','position','biography','salary')
                 ->get();
-            $respuesta['empleados'] = $user;
         	
         }catch(\Exception $e){
-            $respuesta['status'] = 0;
-            $respuesta['msg'] = "Se ha producido un error: ".$e->getMessage();
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
         }
-        return response()->json($respuesta);
+        return response()->json($response);
     }
 
     public function seeProfile(Request $req){
 
         $response = ['status' => 1, "msg" => ""];
-        $data = $req->getContent();
-        $data = json_decode($data);
 
         try{
-            $user = User::where('api_token', $token)->first();
-            $user->api_token = $token;
-            $user->api_token = User::find($token);
+            //Buscamos al usuario por el apitoken
+            $api_token = $req->api_token;
+            $user = User::where('api_token', $api_token)->first();
             $response['datos'] = $user;
         }catch(\Exception $e){
             $response['status'] = 0;

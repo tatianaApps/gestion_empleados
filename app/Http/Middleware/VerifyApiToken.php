@@ -17,18 +17,24 @@ class VerifyApiToken
      */
     public function handle(Request $req, Closure $next)
     {
-        //Buscar al usuario
-        $apitoken = $req->api_token; //pasar en Postman en params, no Json
-        
-        //Pasar usuario
-        $user = User::where('api_token', $apitoken)->first(); 
-       
-        if(!$user){ //Si no hay usuario
-            //Error
-            die("Token incorrecto");
+        if(isset($req->api_token)){
+            //Buscar al usuario
+            $apitoken = $req->api_token; //pasar en Postman en params, no Json
+            
+            //Pasar usuario
+            if($user = User::where('api_token', $apitoken)->first()){
+                $user = User::where('api_token', $apitoken)->first();
+                $response['msg'] = "Token correcto";
+                $req->user = $user;
+                return $next($req);
+            }else{
+                 //Error
+                die("Token incorrecto");
+            }
         }else{
-            $req->user = $user;
-            return $next($req);
+            $response['msg'] = "Token no introducido";
         }
+        
+        return response()->json($response);
     }
 }
